@@ -12,11 +12,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Extract Library
         run: |
           unzip -o Arsip.zip
           find . -name "*.a" -exec cp {} ./libapi.a \;
+          file ./libapi.a
 
       - name: Compile Dylib
         run: |
