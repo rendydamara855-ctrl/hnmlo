@@ -1,0 +1,42 @@
+name: Build iOS Dylib
+
+on:
+push:
+branches: [ "main", "master" ]
+workflow_dispatch:
+
+jobs:
+build:
+runs-on: macos-latest
+
+steps:
+- name: Checkout Code
+uses: actions/checkout@v4
+
+- name: Extract & Prepare Library
+run: |
+unzip -o Arsip.zip
+FOUND_LIB=$(find . -name "*.a" | head -n 1)
+if [ -n "$FOUND_LIB" ]; then
+cp "$FOUND_LIB" ./libapi.a
+echo "Library berhasil disiapkan dari: $FOUND_LIB"
+else
+echo "File library (.a) tidak ditemukan di dalam Arsip.zip!"
+exit 1
+fi
+
+- name: Compile Dylib
+run: |
+xcrun -sdk iphoneos clang -dynamiclib -arch arm64 \
+-miphoneos-version-min=14.0 \
+-isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+-L. -lapi \
+-framework Foundation -framework UIKit -framework AudioToolbox \
+KeyChecker.m -o KeyChecker.dylib
+
+- name: Upload Result
+uses: actions/upload-artifact@v4
+with:
+name: KeyChecker-Dylib
+path: KeyChecker.dylib
+
